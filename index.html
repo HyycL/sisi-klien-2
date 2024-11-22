@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="min-h-screen flex flex-col">
+        <header class="bg-blue-600 text-white py-4">
+            <div class="container mx-auto px-4 flex justify-between items-center">
+                <h1 class="text-2xl">Admin Dashboard</h1>
+                <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">
+                    Log Out
+                </button>
+            </div>
+        </header>
+        <div class="flex flex-1">
+            <aside class="w-64 bg-white shadow-md">
+                <ul class="py-4">
+                    <li class="px-4 py-2 hover:bg-blue-100">Home</li>
+                    <li class="px-4 py-2 hover:bg-blue-100">Students</li>
+                    <li class="px-4 py-2 hover:bg-blue-100">Settings</li>
+                </ul>
+            </aside>
+            <main class="flex-1 p-4">
+                <div class="bg-white shadow-md rounded p-4">
+                    <h2 class="text-xl font-bold mb-4">List Mahasiswa</h2>
+                    <button id="addStudentBtn" class="bg-blue-500 text-white px-4 py-2 rounded mb-4">Tambah Mahasiswa</button>
+                    <table class="min-w-full bg-white border">
+                        <thead>
+                            <tr class="bg-gray-200 text-left">
+                                <th class="py-2 px-4">No</th>
+                                <th class="py-2 px-4">Nama</th>
+                                <th class="py-2 px-4">NIM</th>
+                                <th class="py-2 px-4">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentTableBody">
+                            <tr>
+                                <td class="py-2 px-4">1</td>
+                                <td class="py-2 px-4">Andi Pratama</td>
+                                <td class="py-2 px-4">12345678</td>
+                                <td class="py-2 px-4">
+                                    <button class="edit-btn bg-yellow-500 text-white px-2 py-1 rounded">Edit</button>
+                                    <button class="delete-btn bg-red-500 text-white px-2 py-1 rounded">Hapus</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+        <footer class="bg-gray-800 text-white py-4 mt-4">
+            <div class="container mx-auto px-4">
+                <p class="text-center">&copy; 2024 Admin Dashboard</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Modal Form Tambah/Edit Mahasiswa -->
+    <div id="studentModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex justify-center items-center">
+        <div class="bg-white p-6 rounded shadow-lg w-1/3">
+            <h2 id="modalTitle" class="text-xl font-bold mb-4">Tambah Mahasiswa</h2>
+            <form id="studentForm">
+                <div class="mb-4">
+                    <label for="studentName" class="block text-sm font-medium">Nama:</label>
+                    <input type="text" id="studentName" class="mt-1 p-2 border rounded w-full" required>
+                </div>
+                <div class="mb-4">
+                    <label for="studentNIM" class="block text-sm font-medium">NIM:</label>
+                    <input type="text" id="studentNIM" class="mt-1 p-2 border rounded w-full" required>
+                </div>
+                <div class="flex justify-end">
+                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            let editIndex = null;
+
+            $('#addStudentBtn').click(function() {
+                $('#modalTitle').text('Tambah Mahasiswa');
+                $('#studentForm')[0].reset();
+                $('#studentModal').removeClass('hidden');
+                editIndex = null;
+            });
+
+            $('#studentForm').submit(function(e) {
+                e.preventDefault();
+                const name = $('#studentName').val();
+                const nim = $('#studentNIM').val();
+
+                if (editIndex === null) {
+                    // Add new student
+                    const row = `
+                        <tr>
+                            <td class="py-2 px-4">${$('#studentTableBody tr').length + 1}</td>
+                            <td class="py-2 px-4">${name}</td>
+                            <td class="py-2 px-4">${nim}</td>
+                            <td class="py-2 px-4">
+                                <button class="edit-btn bg-yellow-500 text-white px-2 py-1 rounded">Edit</button>
+                                <button class="delete-btn bg-red-500 text-white px-2 py-1 rounded">Hapus</button>
+                            </td>
+                        </tr>
+                    `;
+                    $('#studentTableBody').append(row);
+                } else {
+                    // Update existing student
+                    const row = $('#studentTableBody tr').eq(editIndex);
+                    row.find('td').eq(1).text(name);
+                    row.find('td').eq(2).text(nim);
+                }
+
+                $('#studentModal').addClass('hidden');
+            });
+
+            $(document).on('click', '.edit-btn', function() {
+                const row = $(this).closest('tr');
+                editIndex = row.index();
+                $('#studentName').val(row.find('td').eq(1).text());
+                $('#studentNIM').val(row.find('td').eq(2).text());
+                $('#modalTitle').text('Edit Mahasiswa');
+                $('#studentModal').removeClass('hidden');
+            });
+
+            $(document).on('click', '.delete-btn', function() {
+                const row = $(this).closest('tr');
+                const index = row.index();
+
+                Swal.fire({
+                    title: 'Yakin ingin menghapus?',
+                    text: 'Data ini akan hilang selamanya!',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, hapus!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        row.remove();
+                        $('#studentTableBody tr').each(function(i) {
+                            $(this).find('td').eq(0).text(i + 1);
+                        });
+                        Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success');
+                    }
+                });
+            });
+
+            $('#logoutBtn').click(function() {
+                Swal.fire({
+                    title: 'Log Out?',
+                    text: 'Anda yakin ingin keluar?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, keluar',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire('Logged Out', 'Anda telah keluar.', 'success');
+                        // Example redirect:
+                        // window.location.href = 'login.html';
+                    }
+                });
+            });
+
+            $('#studentModal').click(function(e) {
+                if ($(e.target).is('#studentModal')) {
+                    $('#studentModal').addClass('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
